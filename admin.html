@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin</title>
+<style>
+:root{--bg:#0b0b14;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.1);--txt:#ececf6;--mut:#9a9ab4;--grad:linear-gradient(135deg,#8b5cf6,#22d3ee);--err:#f87171}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,sans-serif;padding:16px;max-width:900px;margin:0 auto}
+h1{font-size:22px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;display:inline-block}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+a,button{font:inherit;color:inherit}
+.btn{padding:7px 12px;border-radius:10px;background:var(--card);border:1px solid var(--line);cursor:pointer;font-weight:600;font-size:13px;text-decoration:none}
+.btn.pri{background:var(--grad);color:#08080f;border:0}
+.btn.red{color:var(--err)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.card b{display:block;font-size:26px}.card span{color:var(--mut);font-size:13px}
+.row{display:flex;gap:8px;margin-bottom:16px}
+input{flex:1;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--txt);font:inherit;outline:0}
+.tbl{display:flex;flex-direction:column;gap:8px}
+.u{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.u small{color:var(--mut);display:block}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(139,92,246,.3)}
+.tag.ban{background:rgba(248,113,113,.3)}
+h2{font-size:16px;margin:18px 0 10px}
+#msg{color:var(--mut);padding:30px;text-align:center}
+</style>
+</head>
+<body>
+<div class="top"><h1>⚙️ Admin panel</h1><a class="btn" href="/">← Back to site</a></div>
+<div id="msg">Loading…</div>
+<div id="app" style="display:none">
+  <div class="grid" id="stats"></div>
+  <h2>📢 Site banner</h2>
+  <div class="row"><input id="bn" maxlength="200" placeholder="Announcement shown on top of the site (empty = hide)"><button class="btn pri" id="bnGo">Save</button></div>
+  <h2>👥 Users</h2>
+  <div class="tbl" id="users"></div>
+</div>
+<script>
+const tok=localStorage.nova_token||'';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function api(p,b){const r=await fetch(p,{method:b?'POST':'GET',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:b?JSON.stringify(b):undefined});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Error');return j}
+async function load(){
+  const s=await api('/api/admin?action=stats');
+  $('#stats').innerHTML=[['Users',s.users],['Chat today',s.usage.chat],['Code today',s.usage.code],['Images today',s.usage.image],['Videos today',s.usage.video]].map(x=>`<div class="card"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+  $('#bn').value=s.banner;
+  const u=await api('/api/admin?action=users');
+  $('#users').innerHTML=u.users.map(x=>`<div class="u"><div>${esc(x.name)} ${x.role==='admin'?'<span class="tag">admin</span>':''} ${x.banned?'<span class="tag ban">banned</span>':''}<small>${esc(x.email)} · ${new Date(x.created).toLocaleDateString()}</small></div><div><button class="btn" data-a="ban" data-e="${esc(x.email)}" data-b="${x.banned?0:1}">${x.banned?'Unban':'Ban'}</button> <button class="btn red" data-a="delete" data-e="${esc(x.email)}">Delete</button></div></div>`).join('')||'<div class="card">No users yet.</div>';
+}
+$('#users').onclick=async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.a==='delete'&&!confirm('Delete '+b.dataset.e+' permanently?'))return;
+  try{await api('/api/admin',{action:b.dataset.a,email:b.dataset.e,banned:b.dataset.b==='1'});load()}catch(err){alert(err.message)}
+};
+$('#bnGo').onclick=async()=>{try{await api('/api/admin',{action:'banner',text:$('#bn').value});alert('Saved')}catch(e){alert(e.message)}};
+(async()=>{
+  if(!tok){$('#msg').innerHTML='Please <a href="/" style="color:#22d3ee">sign in</a> with your admin account first.';return}
+  try{await load();$('#msg').style.display='none';$('#app').style.display='block'}
+  catch(e){$('#msg').textContent='🔒 '+e.message+' (sign in with the ADMIN_EMAIL account)'}
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b14">
+<title>NovaAI</title>
+<style>
+:root{--bg:#0b0b14;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.1);--txt:#ececf6;--mut:#9a9ab4;--a:#8b5cf6;--b:#22d3ee;--ok:#34d399;--err:#f87171;--grad:linear-gradient(135deg,#8b5cf6,#22d3ee)}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--txt);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;display:flex;flex-direction:column;overflow:hidden}
+body:before{content:"";position:fixed;inset:0;background:radial-gradient(600px 400px at 10% -10%,rgba(139,92,246,.28),transparent),radial-gradient(500px 400px at 100% 10%,rgba(34,211,238,.18),transparent);pointer-events:none}
+header{position:relative;display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);backdrop-filter:blur(14px);z-index:5}
+.logo{font-weight:800;font-size:19px;letter-spacing:-.3px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;margin-right:auto}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+.btn{padding:8px 14px;border-radius:10px;background:var(--card);border:1px solid var(--line);font-weight:600;font-size:14px;transition:.15s;display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--txt)}
+.btn:hover{background:rgba(255,255,255,.1)}
+.btn.pri{background:var(--grad);border:0;color:#08080f}
+.btn.disc{background:#5865f2;border:0;color:#fff}
+.btn[disabled]{opacity:.5;pointer-events:none}
+#banner{position:relative;background:linear-gradient(90deg,rgba(139,92,246,.3),rgba(34,211,238,.25));padding:7px 14px;font-size:13px;text-align:center;display:none}
+nav{position:relative;display:flex;gap:6px;padding:10px 14px;overflow-x:auto;z-index:4}
+nav button{padding:9px 16px;border-radius:12px;background:transparent;color:var(--mut);font-weight:600;white-space:nowrap;border:1px solid transparent}
+nav button.on{background:var(--card);color:var(--txt);border-color:var(--line);box-shadow:0 0 0 1px rgba(139,92,246,.4) inset}
+main{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;max-width:900px;width:100%;margin:0 auto;padding:0 14px 12px;z-index:2}
+.view{display:none;flex:1;min-height:0;flex-direction:column}
+.view.on{display:flex}
+.msgs{flex:1;overflow-y:auto;padding:6px 0 10px;display:flex;flex-direction:column;gap:12px}
+.empty{margin:auto;text-align:center;color:var(--mut);padding:20px}
+.empty h2{font-size:24px;color:var(--txt);margin-bottom:6px;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:14px}
+.chip{padding:8px 12px;border-radius:99px;background:var(--card);border:1px solid var(--line);font-size:13px;color:var(--txt)}
+.m{max-width:92%;padding:11px 14px;border-radius:16px;word-wrap:break-word;overflow-wrap:anywhere}
+.m.u{align-self:flex-end;background:var(--grad);color:#08080f;font-weight:500;border-bottom-right-radius:4px}
+.m.a{align-self:flex-start;background:var(--card);border:1px solid var(--line);border-bottom-left-radius:4px}
+.m pre{background:#05050b;border:1px solid var(--line);border-radius:10px;padding:12px;margin:8px 0;overflow-x:auto;font-size:13px;position:relative}
+.m code{font-family:ui-monospace,Menlo,Consolas,monospace}
+.m :not(pre)>code{background:rgba(255,255,255,.1);padding:1px 6px;border-radius:5px;font-size:13px}
+.copy{position:absolute;top:6px;right:6px;background:var(--card);border:1px solid var(--line);border-radius:7px;padding:3px 9px;font-size:12px;color:var(--mut)}
+.typing{display:inline-flex;gap:4px}.typing i{width:7px;height:7px;border-radius:50%;background:var(--mut);animation:b 1s infinite}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-4px)}}
+.bar{display:flex;gap:8px;align-items:flex-end;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px}
+.bar textarea,.field{flex:1;background:transparent;border:0;outline:0;color:var(--txt);font:inherit;resize:none;max-height:140px;padding:6px 8px}
+.send{width:42px;height:42px;border-radius:12px;background:var(--grad);color:#08080f;font-size:18px;font-weight:800;flex:none}
+.send[disabled]{opacity:.5}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.panel textarea{width:100%;min-height:84px;background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--txt);font:inherit;outline:0;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+select{background:rgba(0,0,0,.35);color:var(--txt);border:1px solid var(--line);border-radius:10px;padding:8px 10px;font:inherit}
+.gal{flex:1;overflow-y:auto;margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;align-content:start}
+.gal figure{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.gal img,.gal video{width:100%;display:block}
+.gal figcaption{padding:8px 10px;display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--mut)}
+.gal a{color:var(--b);text-decoration:none;font-weight:700}
+.status{color:var(--mut);font-size:13px;min-height:18px}
+.lock{padding:18px;text-align:center;color:var(--mut)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal.on{display:flex}
+.box{width:100%;max-width:400px;background:#12121f;border:1px solid var(--line);border-radius:20px;padding:22px;display:flex;flex-direction:column;gap:12px;max-height:92vh;overflow:auto}
+.box h3{font-size:20px}
+.box p{color:var(--mut);font-size:14px}
+.box input{background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--txt);font:inherit;outline:0;width:100%}
+.box input:focus{border-color:var(--a)}
+.tabs{display:flex;background:rgba(0,0,0,.35);border-radius:12px;padding:4px}
+.tabs button{flex:1;padding:8px;border-radius:9px;background:transparent;color:var(--mut);font-weight:700}
+.tabs button.on{background:var(--card);color:var(--txt)}
+.err{color:var(--err);font-size:13px;min-height:16px}
+.link{background:none;color:var(--mut);text-decoration:underline;font-size:13px;align-self:center}
+.who{font-size:13px;color:var(--mut)}
+@media(max-width:520px){.hide-m{display:none}header{padding:8px 10px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" id="logo">NovaAI</div>
+  <a class="btn disc" id="discord" href="#" target="_blank" rel="noopener" style="display:none">💬 <span class="hide-m">Join </span>Discord</a>
+  <a class="btn" id="adminBtn" href="/admin" style="display:none">⚙️ Admin</a>
+  <span class="who hide-m" id="who"></span>
+  <button class="btn pri" id="authBtn">Sign in</button>
+</header>
+<div id="banner"></div>
+<nav id="nav">
+  <button data-t="chat" class="on">💬 Chat</button>
+  <button data-t="code">👨‍💻 Code</button>
+  <button data-t="image">🎨 Image</button>
+  <button data-t="video">🎬 Video</button>
+</nav>
+<main>
+  <section class="view on" id="v-chat"></section>
+  <section class="view" id="v-code"></section>
+  <section class="view" id="v-image">
+    <div class="panel">
+      <textarea id="imgPrompt" placeholder="Describe the image… e.g. a neon samurai cat riding a motorbike in the rain, cinematic"></textarea>
+      <div class="row">
+        <select id="imgSize"><option value="square">Square</option><option value="wide">Wide 16:9</option><option value="tall">Tall 9:16</option></select>
+        <button class="btn pri" id="imgGo" style="margin-left:auto">✨ Generate</button>
+      </div>
+      <div class="status" id="imgStatus"></div>
+    </div>
+    <div class="gal" id="imgGal"></div>
+  </section>
+  <section class="view" id="v-video">
+    <div class="panel">
+      <textarea id="vidPrompt" placeholder="Describe the video… e.g. drone shot over snowy mountains at sunrise, smooth motion"></textarea>
+      <div class="row"><button class="btn pri" id="vidGo" style="margin-left:auto">🎬 Generate video</button></div>
+      <div class="status" id="vidStatus"></div>
+    </div>
+    <div class="gal" id="vidGal"></div>
+  </section>
+</main>
+
+<!-- Welcome (shows once) -->
+<div class="modal" id="welcome"><div class="box">
+  <h3 id="wTitle">Welcome 👋</h3>
+  <p>Free AI chat, code, image and video generation. Sign up once and you're set, or try as a guest.</p>
+  <button class="btn pri" id="wSign" style="justify-content:center">Create free account</button>
+  <button class="btn" id="wGuest" style="justify-content:center">Continue as guest</button>
+  <a class="btn disc" id="wDisc" href="#" target="_blank" rel="noopener" style="justify-content:center;display:none">💬 Join our Discord</a>
+  <p style="font-size:12px">Guests get limited daily use and no video. Accounts get higher limits and video.</p>
+</div></div>
+
+<!-- Auth -->
+<div class="modal" id="authM"><div class="box">
+  <div class="tabs"><button id="tIn" class="on">Sign in</button><button id="tUp">Sign up</button></div>
+  <input id="aName" placeholder="Your name" autocomplete="name" style="display:none">
+  <input id="aEmail" type="email" placeholder="Email" autocomplete="email">
+  <input id="aPass" type="password" placeholder="Password (8+ characters)" autocomplete="current-password">
+  <div class="err" id="aErr"></div>
+  <button class="btn pri" id="aGo" style="justify-content:center">Sign in</button>
+  <button class="link" id="aClose">Continue as guest</button>
+</div></div>
+
+<script>
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const S={token:localStorage.nova_token||'',user:null,cfg:{},hist:{chat:[],code:[]},busy:{}};
+let gid=localStorage.nova_gid; if(!gid){gid=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now());localStorage.nova_gid=gid}
+
+async function api(path,body){
+  const r=await fetch(path,{method:body?'POST':'GET',headers:{'Content-Type':'application/json','x-guest-id':gid,...(S.token?{Authorization:'Bearer '+S.token}:{})},body:body?JSON.stringify(body):undefined});
+  const j=await r.json().catch(()=>({error:'Server returned an unexpected response.'}));
+  if(!r.ok){const e=new Error(j.error||'Something went wrong');e.data=j;e.status=r.status;throw e}
+  return j;
+}
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function md(t){
+  const parts=t.split(/```/);
+  return parts.map((p,i)=>{
+    if(i%2){const nl=p.indexOf('\n');const code=nl>-1?p.slice(nl+1):p;return `<pre><button class="copy" onclick="cp(this)">Copy</button><code>${esc(code.replace(/\n$/,''))}</code></pre>`}
+    return esc(p).replace(/`([^`\n]+)`/g,'<code>$1</code>').replace(/\*\*([^*\n]+)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+  }).join('');
+}
+function cp(b){navigator.clipboard.writeText(b.nextElementSibling.textContent);b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',1200)}
+
+/* ---------- tabs ---------- */
+$$('#nav button').forEach(b=>b.onclick=()=>{
+  $$('#nav button').forEach(x=>x.classList.toggle('on',x===b));
+  $$('.view').forEach(v=>v.classList.toggle('on',v.id==='v-'+b.dataset.t));
+});
+
+/* ---------- chat + code ---------- */
+const SUG={chat:['Explain AI in simple words','Write a short story about a robot','Give me a 7-day workout plan','Help me write an email to my boss'],code:['Build a to-do app in HTML/JS','Python script to rename files','Explain async/await with examples','Create a REST API in Node.js']};
+function mkChat(mode){
+  const v=$('#v-'+mode);
+  v.innerHTML=`<div class="msgs" id="m-${mode}"></div><div class="bar"><textarea rows="1" id="i-${mode}" placeholder="${mode==='chat'?'Message NovaAI…':'Describe the code you need…'}"></textarea><button class="send" id="s-${mode}">➤</button></div>`;
+  const box=$('#m-'+mode),inp=$('#i-'+mode),btn=$('#s-'+mode);
+  function empty(){box.innerHTML=`<div class="empty"><h2>${mode==='chat'?'How can I help?':'What shall we build?'}</h2><div>${mode==='chat'?'Ask anything in any language':'Get complete working code'}</div><div class="chips">${SUG[mode].map(s=>`<button class="chip">${s}</button>`).join('')}</div></div>`;$$('#m-'+mode+' .chip').forEach(c=>c.onclick=()=>{inp.value=c.textContent;go()})}
+  empty();
+  const add=(cls,html)=>{if(box.querySelector('.empty'))box.innerHTML='';const d=document.createElement('div');d.className='m '+cls;d.innerHTML=html;box.appendChild(d);box.scrollTop=box.scrollHeight;return d};
+  async function go(){
+    const t=inp.value.trim();if(!t||S.busy[mode])return;
+    inp.value='';inp.style.height='auto';S.busy[mode]=1;btn.disabled=true;
+    S.hist[mode].push({role:'user',content:t});add('u',esc(t).replace(/\n/g,'<br>'));
+    const w=add('a','<span class="typing"><i></i><i></i><i></i></span>');
+    try{const j=await api('/api/chat',{mode,messages:S.hist[mode]});S.hist[mode].push({role:'assistant',content:j.reply});w.innerHTML=md(j.reply)}
+    catch(e){S.hist[mode].pop();w.innerHTML='⚠️ '+esc(e.message);if(e.data&&e.data.needAuth)openAuth('up')}
+    S.busy[mode]=0;btn.disabled=false;box.scrollTop=box.scrollHeight;
+  }
+  btn.onclick=go;
+  inp.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey&&innerWidth>700){e.preventDefault();go()}};
+  inp.oninput=()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,140)+'px'};
+}
+mkChat('chat');mkChat('code');
+
+/* ---------- image ---------- */
+$('#imgGo').onclick=async()=>{
+  const p=$('#imgPrompt').value.trim();if(p.length<3)return;
+  const b=$('#imgGo'),st=$('#imgStatus');b.disabled=true;st.textContent='Creating your image… (5–20 seconds)';
+  try{
+    const j=await api('/api/image',{prompt:p,size:$('#imgSize').value});
+    const f=document.createElement('figure');
+    f.innerHTML=`<img src="${j.image}" alt=""><figcaption><span>${esc(p.slice(0,60))}</span><a download="nova-image.png" href="${j.image}">Save</a></figcaption>`;
+    $('#imgGal').prepend(f);st.textContent='';
+  }catch(e){st.textContent='⚠️ '+e.message;if(e.data&&e.data.needAuth)openAuth('up')}
+  b.disabled=false;
+};
+
+/* ---------- video ---------- */
+$('#vidGo').onclick=async()=>{
+  const p=$('#vidPrompt').value.trim();if(p.length<5)return;
+  if(!S.user){$('#vidStatus').textContent='🔒 Sign up free to unlock video.';openAuth('up');return}
+  const b=$('#vidGo'),st=$('#vidStatus');b.disabled=true;st.textContent='Sending to the video AI…';
+  try{
+    const {id}=await api('/api/video',{prompt:p});
+    const t0=Date.now();
+    while(Date.now()-t0<6*60*1000){
+      await new Promise(r=>setTimeout(r,4000));
+      const j=await api('/api/video?id='+encodeURIComponent(id));
+      if(j.status==='done'){
+        const f=document.createElement('figure');
+        f.innerHTML=`<video src="${j.url}" controls loop playsinline></video><figcaption><span>${esc(p.slice(0,60))}</span><a href="${j.url}" target="_blank" rel="noopener" download>Save</a></figcaption>`;
+        $('#vidGal').prepend(f);st.textContent='';b.disabled=false;return;
+      }
+      if(j.status==='failed')throw new Error(j.error||'Video failed');
+      st.textContent='Rendering video… '+Math.round((Date.now()-t0)/1000)+'s (usually 30–120s)';
+    }
+    throw new Error('Took too long. Try a shorter prompt.');
+  }catch(e){st.textContent='⚠️ '+e.message}
+  b.disabled=false;
+};
+
+/* ---------- auth ---------- */
+let mode='in';
+function openAuth(m){setMode(m||'in');$('#aErr').textContent='';$('#authM').classList.add('on');$('#welcome').classList.remove('on')}
+function setMode(m){mode=m;$('#tIn').classList.toggle('on',m==='in');$('#tUp').classList.toggle('on',m==='up');$('#aName').style.display=m==='up'?'block':'none';$('#aGo').textContent=m==='up'?'Create account':'Sign in';$('#aPass').autocomplete=m==='up'?'new-password':'current-password'}
+$('#tIn').onclick=()=>setMode('in');$('#tUp').onclick=()=>setMode('up');
+$('#aClose').onclick=()=>$('#authM').classList.remove('on');
+$('#authM').onclick=e=>{if(e.target.id==='authM')$('#authM').classList.remove('on')};
+$('#authBtn').onclick=()=>{if(S.user){if(confirm('Sign out?')){localStorage.removeItem('nova_token');location.reload()}}else openAuth('in')};
+$('#aGo').onclick=async()=>{
+  const b=$('#aGo');b.disabled=true;$('#aErr').textContent='';
+  try{
+    const j=await api('/api/auth',{action:mode==='up'?'signup':'signin',name:$('#aName').value,email:$('#aEmail').value,password:$('#aPass').value});
+    S.token=j.token;localStorage.nova_token=j.token;S.user=j.user;localStorage.nova_seen='1';
+    $('#authM').classList.remove('on');paintUser();
+    if(mode==='up'&&S.cfg.discord&&!localStorage.nova_disc){localStorage.nova_disc='1';$('#wTitle').textContent='Account created 🎉';$('#wSign').style.display='none';$('#wGuest').textContent='Start creating';$('#welcome').classList.add('on')}
+  }catch(e){$('#aErr').textContent=e.message}
+  b.disabled=false;
+};
+['aEmail','aPass','aName'].forEach(i=>$('#'+i).addEventListener('keydown',e=>{if(e.key==='Enter')$('#aGo').click()}));
+$('#wSign').onclick=()=>openAuth('up');
+$('#wGuest').onclick=()=>{localStorage.nova_seen='1';$('#welcome').classList.remove('on')};
+
+function paintUser(){
+  $('#authBtn').textContent=S.user?'Sign out':'Sign in';
+  $('#who').textContent=S.user?S.user.name:'Guest';
+  $('#adminBtn').style.display=S.user&&S.user.role==='admin'?'inline-flex':'none';
+}
+
+/* ---------- boot ---------- */
+(async()=>{
+  try{S.cfg=await api('/api/auth?action=config')}catch{}
+  document.title=S.cfg.name||'NovaAI';$('#logo').textContent=S.cfg.name||'NovaAI';
+  if(S.cfg.discord){['#discord','#wDisc'].forEach(s=>{$(s).href=S.cfg.discord;$(s).style.display=''})}
+  if(S.cfg.banner){$('#banner').textContent=S.cfg.banner;$('#banner').style.display='block'}
+  if(S.token){try{const j=await api('/api/auth?action=me');S.user=j.user;if(!j.user){S.token='';localStorage.removeItem('nova_token')}}catch{}}
+  paintUser();
+  if(!S.user&&!localStorage.nova_seen)$('#welcome').classList.add('on');
+})();
+</script>
+</body>
+</html>
